@@ -5,7 +5,10 @@ import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.media.AudioManager;
+import android.net.rtp.AudioStream;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
@@ -26,11 +29,34 @@ public class IosColumnAudioView extends View {
     private double mMoveDistance =10.0;
     //当前UI高度与view高度的比例
     private double mCurrentLoudRate = 0.5;
+    //系统最大声音index
+    private int mMaxLoud=0;
     //View背景
     private Drawable mDrawable_outside = null;
     //UI背景
     private Drawable mDrawable_inside = null;
+    //记录按压时手指相对于组件view的高度
     private float mDownY;
+    //系统audio管理
+    private AudioManager mAM;
+    //声音流类型int
+    private int mAudioStreamInt= AudioManager.STREAM_MUSIC;
+    //枚举-可选择调整的声音流类型
+    public enum AudioStreamType{
+        Music,
+        System,
+        VideoCall,
+        Ring,
+        Alarm,
+        Notification,
+        Bluetooth_Sco,
+        SystemEnforced,
+        DTMF,
+        TTS,
+        Assistant,
+        Accessibility,
+    }
+
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -56,6 +82,10 @@ public class IosColumnAudioView extends View {
 
     private void initial(Context context){
         mContext=context;
+        mAM = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        mMaxLoud = mAM.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        mCurrentLoudRate = (double) mAM.getStreamVolume(AudioManager.STREAM_MUSIC) / mMaxLoud;
+
         if(null == mDrawable_outside){
             setBackgroundColor(Color.GRAY);
         }else {
@@ -93,6 +123,8 @@ public class IosColumnAudioView extends View {
     }
 
     private void refresh(){
+        mAM.setStreamVolume(AudioManager.STREAM_SYSTEM, (int)(mCurrentLoudRate * mMaxLoud), 0);
+        Log.d("TAG", "refresh: "+(int)(mCurrentLoudRate * mMaxLoud));
         invalidate();
     }
 
@@ -109,5 +141,11 @@ public class IosColumnAudioView extends View {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (pxValue / scale + 0.5f);
     }
-
+//
+//    private int getAudioStreamType(String streamType){
+//        switch (streamType){
+//            default:
+//                break;
+//        }
+//    }
 }
