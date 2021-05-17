@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="ios_column_audio_view_radius">20dp</dimen>
+</resources>

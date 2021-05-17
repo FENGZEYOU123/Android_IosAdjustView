@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable
+        name="IosColumnAudioView">
+        <attr name="IosColumnAudioView_setBackgroundOutSide" format="reference|color"></attr>
+        <attr name="IosColumnAudioView_setBackgroundInSide" format="reference|color"></attr>
+    </declare-styleable>
+</resources>
