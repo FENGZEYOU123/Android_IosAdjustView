@@ -56,11 +56,11 @@ public class IosColumnAudioView extends View {
 
     private void initial(Context context){
         mContext=context;
-        if(null == mDrawable_outside){
-            setBackgroundColor(Color.GRAY);
-        }else {
-            setBackground(mDrawable_outside);
-        }
+//        if(null == mDrawable_outside){
+//            setBackgroundColor(Color.GRAY);
+//        }else {
+//            setBackground(mDrawable_outside);
+//        }
     }
 
     @Override
@@ -99,10 +99,10 @@ public class IosColumnAudioView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        if(null != mDrawable_inside) {
-            mDrawable_inside.setBounds(0,(getHeight()-(int)(getHeight() * mCurrentLoudRate)),getWidth(),getHeight());
-            mDrawable_inside.draw(canvas);
-        }
+//        if(null != mDrawable_inside) {
+//            mDrawable_inside.setBounds(0,(getHeight()-(int)(getHeight() * mCurrentLoudRate)),getWidth(),getHeight());
+//            mDrawable_inside.draw(canvas);
+//        }
     }
 
     private double px2dip(Context context, double pxValue) {
