@@ -6,7 +6,6 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
@@ -21,18 +20,23 @@ import com.yfz.main.R;
  */
 public class IosColumnAudioView extends View {
     private Context mContext;
-    private final int MAX_LOUD=100;
-    private double mCurrentLoudRate = 0;
+    //防止手指持续移动最大距离
+    private final double PREVENT_MOVE_DISTANCE = 2.0;
+    //手指移动后,UI位移幅度大小
+    private double mMoveDistance =10.0;
+    //当前UI高度与view高度的比例
+    private double mCurrentLoudRate = 0.5;
+    //View背景
     private Drawable mDrawable_outside = null;
+    //UI背景
     private Drawable mDrawable_inside = null;
-    private float mDownX,mDownY;
-    private float mDistanceX,mDistanceY;
-
+    private float mDownY;
 
     public IosColumnAudioView(Context context) {
         super(context);
         initial(context);
     }
+
     public IosColumnAudioView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnAudioView);
@@ -40,6 +44,16 @@ public class IosColumnAudioView extends View {
         mDrawable_inside=typedArray.getDrawable(R.styleable.IosColumnAudioView_IosColumnAudioView_setBackgroundInSide);
         initial(context);
     }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+        mMoveDistance = MeasureSpec.getSize(heightMeasureSpec) * 0.05;
+        if(null != mContext) {
+            mMoveDistance = px2dip(mContext, mMoveDistance);
+        }
+    }
+
     private void initial(Context context){
         mContext=context;
         if(null == mDrawable_outside){
@@ -53,21 +67,21 @@ public class IosColumnAudioView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
-                mDownX=event.getX();
                 mDownY=event.getY();
                 break;
             case MotionEvent.ACTION_MOVE:
-                mDistanceX=event.getX()-mDownX;
-                mDistanceY=event.getY()-mDownY;
-                Log.d("TAG", "onTouchEvent距离: "+mDistanceX+"  "+mDistanceY);
-                mCurrentLoudRate = getHeight() / ( getHeight()* mCurrentLoudRate + mDistanceY) ;
-                Log.d("TAG", "onTouchEvent: "+ mCurrentLoudRate);
+                if(mDownY - event.getY() > PREVENT_MOVE_DISTANCE){ //向上移动
+                    mCurrentLoudRate = ( getHeight() * mCurrentLoudRate + mMoveDistance) /  getHeight();
+                }else if(mDownY - event.getY() < -1 * PREVENT_MOVE_DISTANCE) {
+                    mCurrentLoudRate = ( getHeight() * mCurrentLoudRate - mMoveDistance) /  getHeight();
+                }
                 if(mCurrentLoudRate >=1){
                     mCurrentLoudRate =1;
                 }
                 if(mCurrentLoudRate <=0){
                     mCurrentLoudRate =0;
                 }
+                mDownY=event.getY();
                 break;
             case MotionEvent.ACTION_UP:
                 break;
@@ -79,14 +93,21 @@ public class IosColumnAudioView extends View {
     }
 
     private void refresh(){
-        postInvalidate();
+        invalidate();
     }
+
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         if(null != mDrawable_inside) {
-            mDrawable_inside.setBounds(0,(int)(getHeight()-getHeight() * mCurrentLoudRate),getWidth(),getHeight());
+            mDrawable_inside.setBounds(0,(getHeight()-(int)(getHeight() * mCurrentLoudRate)),getWidth(),getHeight());
             mDrawable_inside.draw(canvas);
         }
     }
+
+    private double px2dip(Context context, double pxValue) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (pxValue / scale + 0.5f);
+    }
+
 }
