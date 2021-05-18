@@ -39,24 +39,8 @@ public class IosColumnAudioView extends View {
     private float mDownY;
     //系统audio管理
     private AudioManager mAM;
-    //声音流类型int
+    //声音流类型int//默认是音乐类型
     private int mAudioStreamInt= AudioManager.STREAM_MUSIC;
-    //枚举-可选择调整的声音流类型
-    public enum AudioStreamType{
-        Music,
-        System,
-        VideoCall,
-        Ring,
-        Alarm,
-        Notification,
-        Bluetooth_Sco,
-        SystemEnforced,
-        DTMF,
-        TTS,
-        Assistant,
-        Accessibility,
-    }
-
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -68,6 +52,7 @@ public class IosColumnAudioView extends View {
         TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnAudioView);
         mDrawable_outside=typedArray.getDrawable(R.styleable.IosColumnAudioView_IosColumnAudioView_setBackgroundOutSide);
         mDrawable_inside=typedArray.getDrawable(R.styleable.IosColumnAudioView_IosColumnAudioView_setBackgroundInSide);
+        mAudioStreamInt=typedArray.getInteger(R.styleable.IosColumnAudioView_IosColumnAudioView_setAudioStreamType,mAudioStreamInt);
         initial(context);
     }
 
@@ -83,8 +68,8 @@ public class IosColumnAudioView extends View {
     private void initial(Context context){
         mContext=context;
         mAM = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mMaxLoud = mAM.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        mCurrentLoudRate = (double) mAM.getStreamVolume(AudioManager.STREAM_MUSIC) / mMaxLoud;
+        mMaxLoud = mAM.getStreamMaxVolume(mAudioStreamInt);
+        mCurrentLoudRate = (double) mAM.getStreamVolume(mAudioStreamInt) / mMaxLoud;
 
         if(null == mDrawable_outside){
             setBackgroundColor(Color.GRAY);
@@ -123,8 +108,7 @@ public class IosColumnAudioView extends View {
     }
 
     private void refresh(){
-        mAM.setStreamVolume(AudioManager.STREAM_SYSTEM, (int)(mCurrentLoudRate * mMaxLoud), 0);
-        Log.d("TAG", "refresh: "+(int)(mCurrentLoudRate * mMaxLoud));
+        mAM.setStreamVolume(mAudioStreamInt, (int)(mCurrentLoudRate * mMaxLoud), 0);
         invalidate();
     }
 

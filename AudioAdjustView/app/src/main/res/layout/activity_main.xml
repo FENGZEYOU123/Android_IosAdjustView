@@ -14,7 +14,6 @@
 <!--        android:background="@drawable/ios_column_audio_view_background_outside"-->
 <!--        android:layout_width="100dp"-->
 <!--        android:layout_height="400dp">-->
-
 <!--        </LinearLayout>-->
 
     <com.yfz.main.View.IosColumnAudioView
