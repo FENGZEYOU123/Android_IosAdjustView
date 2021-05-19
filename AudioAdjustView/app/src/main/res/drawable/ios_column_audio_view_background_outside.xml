@@ -2,5 +2,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
     <corners android:radius="@dimen/ios_column_audio_view_radius">
     </corners>
-    <solid android:color="@color/background_outside"></solid>
+    <solid android:color="@color/colorBackground"></solid>
 </shape>

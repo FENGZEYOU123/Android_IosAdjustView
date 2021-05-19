@@ -4,5 +4,5 @@
         android:bottomLeftRadius="@dimen/ios_column_audio_view_radius"
         android:bottomRightRadius="@dimen/ios_column_audio_view_radius">
     </corners>
-    <solid android:color="@color/background_inside"></solid>
+    <solid android:color="@color/colorLoud"></solid>
 </shape>

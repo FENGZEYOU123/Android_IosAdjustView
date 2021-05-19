@@ -2,9 +2,10 @@
 <resources>
     <declare-styleable
         name="IosColumnAudioView">
-        <attr name="IosColumnAudioView_setBackgroundOutSide" format="reference|color"></attr>
-        <attr name="IosColumnAudioView_setBackgroundInSide" format="reference|color"></attr>
-        <attr name="IosColumnAudioView_setAudioStreamType"   format="reference|color">
+        <attr name="iosColumnAudioView_setColorBackground" format="color"></attr>
+        <attr name="iosColumnAudioView_setColorLoud" format="color"></attr>
+        <attr name="iosColumnAudioView_setRadiusXY" format="dimension"></attr>
+        <attr name="iosColumnAudioView_setAudioStreamType"   format="integer">
             <enum name="STREAM_DEFAULT" value="-1"></enum>
             <enum name="STREAM_VOICE_CALL" value="0"></enum>
             <enum name="STREAM_SYSTEM" value="1"></enum>
