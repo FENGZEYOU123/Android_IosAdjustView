@@ -57,6 +57,14 @@ public class IosColumnAudioView extends View {
      * 设置组件背景颜色-xml-iosColumnAudioView_setColorBackground
      */
     private int mColorBackground = Color.DKGRAY;
+    /**
+     * 设置文字大小-xml-iosColumnAudioView_setTextSize
+     */
+    private float mTextSize = 15;
+    /**
+     * 设置文字颜色-xml-iosColumnAudioView_setTextColor
+     */
+    private int mTextColor = Color.BLACK;
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -65,11 +73,14 @@ public class IosColumnAudioView extends View {
 
     public IosColumnAudioView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        mTextSize = sp2px(context,mTextSize);
         TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnAudioView);
         mColorBackground = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorBackground,mColorBackground);
         mColorLoud = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorLoud,mColorLoud);
         mAudioStreamInt=typedArray.getInteger(R.styleable.IosColumnAudioView_iosColumnAudioView_setAudioStreamType,mAudioStreamInt);
         mRXY = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setRadiusXY, mRXY);
+        mTextSize = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextSize,mTextSize);
+        mTextColor = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextColor,mTextColor);
         initial(context);
     }
 
@@ -91,7 +102,10 @@ public class IosColumnAudioView extends View {
         mRectF = new RectF();
         setWillNotDraw(false);
         setBackgroundColor(Color.TRANSPARENT);
+        mPaint.setTextAlign(Paint.Align.CENTER);
+        mPaint.setTextSize(mTextSize);
     }
+
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -131,32 +145,82 @@ public class IosColumnAudioView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         int layerId=canvas.saveLayer(0, 0, canvas.getWidth(), canvas.getHeight(), null, Canvas.ALL_SAVE_FLAG);
-        onDrawLoud(canvas);
-        onDrawRectBackground(canvas,layerId);
+        onDrawBackground(canvas);
+        onDrawLoud(canvas,layerId);
+        onDrawText(canvas);
+        canvas.restoreToCount(layerId);
     }
-    private void onDrawLoud(Canvas canvas){
-        mPaint.setColor(mColorLoud);
+
+    /**
+     * 画圆弧背景
+     * @param canvas
+     */
+    private void onDrawBackground(Canvas canvas){
+        mPaint.setColor(mColorBackground );
         mRectF.left=0;
         mRectF.top=0;
         mRectF.right=canvas.getWidth();
         mRectF.bottom=canvas.getHeight();
         canvas.drawRoundRect(mRectF,mRXY,mRXY,mPaint);
     }
-    private void onDrawRectBackground(Canvas canvas,int layerId){
+
+    /**
+     * 画音量背景-方形-随手势上下滑动而变化用来显示音量大小
+     * @param canvas
+     * @param layerId
+     */
+    private void onDrawLoud(Canvas canvas, int layerId){
         mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
-        mPaint.setColor(mColorBackground);
+        mPaint.setColor(mColorLoud);
         mRectF.left=0;
         mRectF.top=(canvas.getHeight()-(int)(canvas.getHeight() * mCurrentLoudRate));
         mRectF.right=canvas.getWidth();
         mRectF.bottom=canvas.getHeight();
         canvas.drawRect(mRectF,mPaint);
         mPaint.setXfermode(null);
-        canvas.restoreToCount(layerId);
+    }
+    private void onDrawText(Canvas canvas){
+        mPaint.setColor(mTextColor);
+        canvas.drawText( ""+(int)(mCurrentLoudRate * 100),0, 20,mPaint);
+        Log.d("TAG", "onDrawText: "+""+(int)(mCurrentLoudRate * 100));
     }
 
-    private double px2dip(Context context, double pxValue) {
-        final float scale = context.getResources().getDisplayMetrics().density;
-        return (pxValue / scale + 0.5f);
+
+
+        /**
+         * 根据手机的分辨率从 dip 的单位 转成为 px(像素)
+         */
+        public int dip2px(Context context, float dpValue) {
+            final float scale = context.getResources().getDisplayMetrics().density;
+            return (int) (dpValue * scale + 0.5f);
+        }
+
+        /**
+         * 根据手机的分辨率从 px(像素) 的单位 转成为 dp
+         */
+        public int px2dip(Context context, float pxValue) {
+            final float scale = context.getResources().getDisplayMetrics().density;
+            return (int) (pxValue / scale + 0.5f);
+        }
+        private double px2dip(Context context, double pxValue) {
+            final float scale = context.getResources().getDisplayMetrics().density;
+            return (pxValue / scale + 0.5f);
+        }
+        /**
+         * 将px值转换为sp值，保证文字大小不变
+         */
+        public int px2sp(Context context, float pxValue) {
+            final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+            return (int) (pxValue / fontScale + 0.5f);
+        }
+
+        /**
+         * 将sp值转换为px值，保证文字大小不变
+         */
+        public int sp2px(Context context, float spValue) {
+            final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+            return (int) (spValue * fontScale + 0.5f);
+
     }
 
 }
