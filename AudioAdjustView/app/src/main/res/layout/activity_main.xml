@@ -13,7 +13,6 @@
         app:iosColumnAudioView_setColorLoud="@color/colorLoud"
         app:iosColumnAudioView_setColorBackground="@color/colorBackground"
         app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
-        app:iosColumnAudioView_setTextColor="@color/colorTransparent"
         android:layout_width="50dp"
         android:layout_height="200dp">
     </com.yfz.main.View.IosColumnAudioView>
