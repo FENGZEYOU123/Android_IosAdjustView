@@ -144,7 +144,7 @@ public class IosColumnAudioView extends View {
      * 更新所有内容-ui-音乐大小
      */
     private void refreshAll(){
-        refreshStreamVolume((int)(mCurrentLoudRate * mMaxLoud));
+        refreshStreamVolume(((int)(mCurrentLoudRate * mMaxLoud))<= mMaxLoud? (int)(mCurrentLoudRate * mMaxLoud) : mMaxLoud);
         refreshUI();
     }
     /**
