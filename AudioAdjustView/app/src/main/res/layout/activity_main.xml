@@ -5,17 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity">
-
-<!--    <LinearLayout-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintLeft_toLeftOf="parent"-->
-<!--        app:layout_constraintRight_toRightOf="parent"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        android:background="@drawable/ios_column_audio_view_background_outside"-->
-<!--        android:layout_width="100dp"-->
-<!--        android:layout_height="400dp">-->
-<!--        </LinearLayout>-->
-
     <com.yfz.main.View.IosColumnAudioView
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -24,6 +13,7 @@
         app:iosColumnAudioView_setColorLoud="@color/colorLoud"
         app:iosColumnAudioView_setColorBackground="@color/colorBackground"
         app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
+        app:iosColumnAudioView_setTextColor="@color/colorTransparent"
         android:layout_width="50dp"
         android:layout_height="200dp">
     </com.yfz.main.View.IosColumnAudioView>

@@ -7,10 +7,10 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.media.AudioManager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
@@ -37,6 +37,10 @@ public class IosColumnAudioView extends View {
     private float mMoveDistance;
     //系统audio管理
     private AudioManager mAM;
+    //当前音量文字数字
+    private String mTextLoud ="";
+    //当前音量文字位置
+    private Rect mTextLoudRect = new Rect();
     //画笔
     private Paint mPaint;
     //位置
@@ -98,7 +102,7 @@ public class IosColumnAudioView extends View {
         mRectF = new RectF();
         setWillNotDraw(false);
         setBackgroundColor(Color.TRANSPARENT);
-        mPaint.setTextAlign(Paint.Align.CENTER);
+//        mPaint.setTextAlign(Paint.Align.CENTER);
         mPaint.setTextSize(mTextSize);
     }
 
@@ -185,11 +189,11 @@ public class IosColumnAudioView extends View {
      * @param canvas
      */
     private void onDrawText(Canvas canvas){
+        mTextLoud = ""+(int)(mCurrentLoudRate * 100);
+//        mPaint.getTextBounds(mTextLoud,0, mTextLoud.length(),mTextLoudRect);
         mPaint.setColor(mTextColor);
-        canvas.drawText( ""+(int)(mCurrentLoudRate * 100),0, 20,mPaint);
+        canvas.drawText( mTextLoud,( canvas.getWidth()/2 - mPaint.measureText(mTextLoud)/2 ), getHeight()/6,mPaint);
     }
-
-
 
         /**
          * 根据手机的分辨率从 dip 的单位 转成为 px(像素)
