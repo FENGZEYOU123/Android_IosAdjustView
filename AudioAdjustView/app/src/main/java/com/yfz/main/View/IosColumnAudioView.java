@@ -38,7 +38,9 @@ public class IosColumnAudioView extends View {
     //标记-是否是当前自己在调整音量大小
     private boolean isMeAdjustVolume = true;
     //当前UI高度与view高度的比例
-    private double mCurrentLoudRate = 0.5;
+    private double mCurrentDrawLoudRate = 0;
+    //当前真实音量与总音量大小比例
+    private double mCurrentRealLoudRate = 0;
     //系统最大声音index
     private int mMaxLoud=0;
     //记录按压时手指相对于组件view的高度
@@ -136,14 +138,14 @@ public class IosColumnAudioView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-//        mRectVolumeDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/5;
+        mRectVolumeDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/10;
     }
 
     private void initial(Context context){
         mContext=context;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         mMaxLoud = mAudioManager.getStreamMaxVolume(mAudioManagerStreamType);
-        mCurrentLoudRate = getCalculateLoudRate();
+        mCurrentDrawLoudRate = getCalculateLoudRate();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
@@ -179,7 +181,7 @@ public class IosColumnAudioView extends View {
      * 更新所有内容-ui-音乐大小
      */
     private void refreshAll(){
-        refreshStreamVolume(((int)(mCurrentLoudRate * mMaxLoud))<= mMaxLoud? (int)(mCurrentLoudRate * mMaxLoud) : mMaxLoud);
+        refreshStreamVolume(((int)(mCurrentDrawLoudRate * mMaxLoud))<= mMaxLoud? (int)(mCurrentDrawLoudRate * mMaxLoud) : mMaxLoud);
         refreshUI();
     }
     /**
@@ -209,12 +211,12 @@ public class IosColumnAudioView extends View {
      * 计算手指移动后音量UI占比大小，视其为音量大小
      */
     private void calculateLoudRate(){
-        mCurrentLoudRate = ( getHeight() * mCurrentLoudRate + mMoveDistance) /  getHeight();
-        if(mCurrentLoudRate >=1){
-            mCurrentLoudRate =1;
+        mCurrentDrawLoudRate = ( getHeight() * mCurrentDrawLoudRate + mMoveDistance) /  getHeight();
+        if(mCurrentDrawLoudRate >=1){
+            mCurrentDrawLoudRate =1;
         }
-        if(mCurrentLoudRate <=0){
-            mCurrentLoudRate =0;
+        if(mCurrentDrawLoudRate <=0){
+            mCurrentDrawLoudRate =0;
         }
     }
     /**
@@ -239,7 +241,7 @@ public class IosColumnAudioView extends View {
         mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
         mPaint.setColor(mColorLoud);
         mRectF.left=0;
-        mRectF.top=(canvas.getHeight()-(int)(canvas.getHeight() * mCurrentLoudRate));
+        mRectF.top=(canvas.getHeight()-(int)(canvas.getHeight() * mCurrentDrawLoudRate));
         mRectF.right=canvas.getWidth();
         mRectF.bottom=canvas.getHeight();
         canvas.drawRect(mRectF,mPaint);
@@ -252,7 +254,7 @@ public class IosColumnAudioView extends View {
     private void onDrawText(Canvas canvas){
         if(mIsDrawTextVolume) { //如果开启了则开始绘制
             mPaint.setStyle(Paint.Style.FILL);
-            mTextLoud = "" + (int) (mCurrentLoudRate * 100);
+            mTextLoud = "" + (int) (mCurrentDrawLoudRate * 100);
             mPaint.setColor(mTextColor);
             canvas.drawText(mTextLoud, (canvas.getWidth() / 2 - mPaint.measureText(mTextLoud) / 2), mTextHeight >= 0 ? mTextHeight : getHeight() / 6, mPaint);
         }
@@ -265,34 +267,20 @@ public class IosColumnAudioView extends View {
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
             mPaint.setColor(mColorVolumeDrawable);
-            onDrawVolumeDrawableArc(canvas); //画最内圆弧
-
+            onDrawVolumeDrawableArc(canvas); //画音量圆弧
         }
     }
     /**
      * 画音量图标-圆弧
      */
     private void onDrawVolumeDrawableArc(Canvas canvas){
-        if(mCurrentLoudRate>0){
-            for(int i=0; i<(int)(mCurrentLoudRate/0.33);i++){
-                onDrawVolumeDrawableArc(canvas,(int)(mCurrentLoudRate/0.33)-i); //画圆弧
+        for(int i = 0; i<=(int)(mCurrentDrawLoudRate /0.33); i++){
+                onDrawVolumeDrawableArc(canvas,(int)(mCurrentDrawLoudRate /0.33)-i); //画圆弧
             }
-//            if((int)(mCurrentLoudRate/0.33)>=0){
-//                onDrawVolumeDrawableArc(canvas,2); //画最内圆弧
-//            }
-//            if((int)(mCurrentLoudRate/0.33)>=1){
-//                onDrawVolumeDrawableArc(canvas,1); //画中间圆弧
-//            }
-//            if((int)(mCurrentLoudRate/0.33)>=2){
-//                onDrawVolumeDrawableArc(canvas,0); //画最外圆弧
-//            }
-        }else {
-            Log.d(TAG, "onDrawVolumeDrawableArc: 不刷新 ");
-
-        }
     }
+
     /**
-     * 画音量图标-最内圆弧
+     * 画音量图标-圆弧
      */
     private void onDrawVolumeDrawableArc(Canvas canvas, int index){
         index=4-index;
@@ -300,44 +288,15 @@ public class IosColumnAudioView extends View {
         mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin * index;
         mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin * index;
         mRectVolumeDrawable.top=mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin *2 *index;
-        //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着音量扩大而缩小的感觉
+        //画板偏移
+        canvas.translate(-mRectVolumeDrawableMargin,0);
+        //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着音量扩大而扩大，缩小而缩小的感觉
         canvas.drawArc(
                 mRectVolumeDrawable,
-                (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1-mCurrentLoudRate)) ),
-                (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1-mCurrentLoudRate) ) ),
-                false,mPaint);
-
-    }
-    /**
-     * 画音量图标-中间圆弧
-     */
-    private void onDrawVolumeDrawableArcSecond(Canvas canvas){
-        mRectVolumeDrawable.left=mRectVolumeDrawableMargin *2;
-        mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin *2;
-        mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin *2;
-        mRectVolumeDrawable.top=mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin*2 *2;
-        //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着音量扩大而缩小的感觉
-        canvas.drawArc(
-                mRectVolumeDrawable,
-                (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1-mCurrentLoudRate))),
-                (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1-mCurrentLoudRate) )),
-                false,mPaint);
-
-    }
-    /**
-     * 画音量图标-最外圆弧
-     */
-    private void onDrawVolumeDrawableArcThird(Canvas canvas){
-        mRectVolumeDrawable.left=mRectVolumeDrawableMargin;
-        mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin;
-        mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin;
-        mRectVolumeDrawable.top=mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin*2;
-        //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着音量扩大而缩小的感觉
-        canvas.drawArc(
-                mRectVolumeDrawable,
-                (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1-mCurrentLoudRate))),
-                (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1-mCurrentLoudRate) )),
-                false,mPaint);
+                (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1- mCurrentDrawLoudRate))),
+                (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1- mCurrentDrawLoudRate))),
+                false,
+                mPaint);
 
     }
     /**
@@ -391,7 +350,7 @@ public class IosColumnAudioView extends View {
          if (intent.getAction().equals(VOLUME_CHANGED_ACTION)){
              if(intent.getIntExtra(EXTRA_VOLUME_STREAM_TYPE, -1) == mAudioManagerStreamType){
                  if(!isMeAdjustVolume) {
-                     mCurrentLoudRate = getCalculateLoudRate();
+                     mCurrentDrawLoudRate = getCalculateLoudRate();
                      refreshUI();
                  }
              }
