@@ -83,7 +83,7 @@ public class IosColumnAudioView extends View {
      */
     private int mTextHeight = -1;
     /**
-     * 设置是否展示音量文字-iosColumnAudioView_setIsDrawTextVolume
+     * 设置是否画音量文字-iosColumnAudioView_setIsDrawTextVolume
      * @param context
      */
     private boolean mIsDrawTextVolume = true;
