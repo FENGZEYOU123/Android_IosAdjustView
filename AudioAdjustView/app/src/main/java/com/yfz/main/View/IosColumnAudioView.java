@@ -27,14 +27,14 @@ public class IosColumnAudioView extends View {
     private Context mContext;
     //防止手指持续移动最大距离
     private final double PREVENT_MOVE_DISTANCE = 2.0;
-    //手指移动后,UI位移幅度大小
-    private double mMoveDistance =10.0;
     //当前UI高度与view高度的比例
     private double mCurrentLoudRate = 0.5;
     //系统最大声音index
     private int mMaxLoud=0;
     //记录按压时手指相对于组件view的高度
     private float mDownY;
+    //手指移动的距离，视为音量调整
+    private float mMoveDistance;
     //系统audio管理
     private AudioManager mAM;
     //画笔
@@ -87,10 +87,6 @@ public class IosColumnAudioView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mMoveDistance = MeasureSpec.getSize(heightMeasureSpec) * 0.05;
-        if(null != mContext) {
-            mMoveDistance = px2dip(mContext, mMoveDistance);
-        }
     }
 
     private void initial(Context context){
@@ -114,17 +110,8 @@ public class IosColumnAudioView extends View {
                 mDownY=event.getY();
                 break;
             case MotionEvent.ACTION_MOVE:
-                if(mDownY - event.getY() > PREVENT_MOVE_DISTANCE){ //向上移动
-                    mCurrentLoudRate = ( getHeight() * mCurrentLoudRate + mMoveDistance) /  getHeight();
-                }else if(mDownY - event.getY() < -1 * PREVENT_MOVE_DISTANCE) {
-                    mCurrentLoudRate = ( getHeight() * mCurrentLoudRate - mMoveDistance) /  getHeight();
-                }
-                if(mCurrentLoudRate >=1){
-                    mCurrentLoudRate =1;
-                }
-                if(mCurrentLoudRate <=0){
-                    mCurrentLoudRate =0;
-                }
+                mMoveDistance = mDownY - event.getY();
+                calculateLoudRate();
                 mDownY=event.getY();
                 break;
             case MotionEvent.ACTION_UP:
@@ -149,6 +136,19 @@ public class IosColumnAudioView extends View {
         onDrawLoud(canvas,layerId);
         onDrawText(canvas);
         canvas.restoreToCount(layerId);
+    }
+
+    /**
+     * 计算手指移动后音量UI占比大小，视其为音量大小
+     */
+    private void calculateLoudRate(){
+        mCurrentLoudRate = ( getHeight() * mCurrentLoudRate + mMoveDistance) /  getHeight();
+        if(mCurrentLoudRate >=1){
+            mCurrentLoudRate =1;
+        }
+        if(mCurrentLoudRate <=0){
+            mCurrentLoudRate =0;
+        }
     }
 
     /**
@@ -179,10 +179,14 @@ public class IosColumnAudioView extends View {
         canvas.drawRect(mRectF,mPaint);
         mPaint.setXfermode(null);
     }
+
+    /**
+     * 画文字-展示当前语音大小
+     * @param canvas
+     */
     private void onDrawText(Canvas canvas){
         mPaint.setColor(mTextColor);
         canvas.drawText( ""+(int)(mCurrentLoudRate * 100),0, 20,mPaint);
-        Log.d("TAG", "onDrawText: "+""+(int)(mCurrentLoudRate * 100));
     }
 
 
