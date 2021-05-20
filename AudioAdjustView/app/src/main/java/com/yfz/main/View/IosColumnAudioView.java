@@ -119,6 +119,8 @@ public class IosColumnAudioView extends View {
         mMaxLoud = mAudioManager.getStreamMaxVolume(mAudioManagerStreamType);
         mCurrentLoudRate = getCalculateLoudRate();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
         mRectF = new RectF();
         setWillNotDraw(false);
         setBackgroundColor(Color.TRANSPARENT);
