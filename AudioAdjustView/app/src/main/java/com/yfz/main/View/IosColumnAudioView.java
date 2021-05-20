@@ -276,6 +276,7 @@ public class IosColumnAudioView extends View {
     private void onDrawVolumeDrawableArc(Canvas canvas){
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
+        //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着音量扩大而缩小的感觉
         canvas.drawArc(
                 mRectVolumeDrawable,
                 (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1-mCurrentLoudRate))),
