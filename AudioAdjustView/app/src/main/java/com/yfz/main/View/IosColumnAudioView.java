@@ -1,16 +1,19 @@
 package com.yfz.main.View;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.media.AudioManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
@@ -25,8 +28,13 @@ import com.yfz.main.R;
  */
 public class IosColumnAudioView extends View {
     private Context mContext;
-    //防止手指持续移动最大距离
-    private final double PREVENT_MOVE_DISTANCE = 2.0;
+    //系统声音广播名
+    private static final String VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION";
+    private static final String EXTRA_VOLUME_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE";
+    //系统声音广播接收器
+    private MyVolumeReceiver mVolumeReceiver = null;
+    //标记-是否是当前自己在调整音量大小
+    private boolean isMeAdjustVolume = true;
     //当前UI高度与view高度的比例
     private double mCurrentLoudRate = 0.5;
     //系统最大声音index
@@ -36,11 +44,9 @@ public class IosColumnAudioView extends View {
     //手指移动的距离，视为音量调整
     private float mMoveDistance;
     //系统audio管理
-    private AudioManager mAM;
+    private AudioManager mAudioManager;
     //当前音量文字数字
     private String mTextLoud ="";
-    //当前音量文字位置
-    private Rect mTextLoudRect = new Rect();
     //画笔
     private Paint mPaint;
     //位置
@@ -48,7 +54,7 @@ public class IosColumnAudioView extends View {
     /**
      * 设置声音流类型-默认音乐-iosColumnAudioView_setAudioStreamType
      */
-    private int mAudioStreamInt= AudioManager.STREAM_MUSIC;
+    private int mAudioManagerStreamType = AudioManager.STREAM_MUSIC;
     /**
      * 设置圆弧度数-xml-iosColumnAudioView_setRadiusXY
      */
@@ -69,6 +75,11 @@ public class IosColumnAudioView extends View {
      * 设置文字颜色-xml-iosColumnAudioView_setTextColor
      */
     private int mTextColor = Color.BLACK;
+    /**
+     * 设置文字高度-xml-iosColumnAudioView_setTextHeight
+     * @param context
+     */
+    private int mTextHeight = -1;
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -81,10 +92,11 @@ public class IosColumnAudioView extends View {
         TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnAudioView);
         mColorBackground = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorBackground,mColorBackground);
         mColorLoud = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorLoud,mColorLoud);
-        mAudioStreamInt=typedArray.getInteger(R.styleable.IosColumnAudioView_iosColumnAudioView_setAudioStreamType,mAudioStreamInt);
+        mAudioManagerStreamType =typedArray.getInteger(R.styleable.IosColumnAudioView_iosColumnAudioView_setAudioStreamType, mAudioManagerStreamType);
         mRXY = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setRadiusXY, mRXY);
         mTextSize = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextSize,mTextSize);
         mTextColor = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextColor,mTextColor);
+        mTextHeight = typedArray.getInt(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextHeight,mTextHeight);
         initial(context);
     }
 
@@ -95,14 +107,13 @@ public class IosColumnAudioView extends View {
 
     private void initial(Context context){
         mContext=context;
-        mAM = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mMaxLoud = mAM.getStreamMaxVolume(mAudioStreamInt);
-        mCurrentLoudRate = (double) mAM.getStreamVolume(mAudioStreamInt) / mMaxLoud;
+        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        mMaxLoud = mAudioManager.getStreamMaxVolume(mAudioManagerStreamType);
+        mCurrentLoudRate = getCalculateLoudRate();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mRectF = new RectF();
         setWillNotDraw(false);
         setBackgroundColor(Color.TRANSPARENT);
-//        mPaint.setTextAlign(Paint.Align.CENTER);
         mPaint.setTextSize(mTextSize);
     }
 
@@ -112,6 +123,7 @@ public class IosColumnAudioView extends View {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 mDownY=event.getY();
+                isMeAdjustVolume=true;
                 break;
             case MotionEvent.ACTION_MOVE:
                 mMoveDistance = mDownY - event.getY();
@@ -119,29 +131,44 @@ public class IosColumnAudioView extends View {
                 mDownY=event.getY();
                 break;
             case MotionEvent.ACTION_UP:
+                isMeAdjustVolume=false;
                 break;
             default:
                 break;
         }
-        refresh();
+        refreshAll();
         return true;
     }
 
-    private void refresh(){
-        mAM.setStreamVolume(mAudioStreamInt, (int)(mCurrentLoudRate * mMaxLoud), 0);
+    /**
+     * 更新所有内容-ui-音乐大小
+     */
+    private void refreshAll(){
+        refreshStreamVolume((int)(mCurrentLoudRate * mMaxLoud));
+        refreshUI();
+    }
+    /**
+     * 设置音量大小
+     * @param currentVolume
+     */
+    public void refreshStreamVolume(int currentVolume){
+        mAudioManager.setStreamVolume(mAudioManagerStreamType,currentVolume, 0);
+    }
+    /**
+     * 刷新UI
+     */
+    public void refreshUI(){
         invalidate();
     }
-
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         int layerId=canvas.saveLayer(0, 0, canvas.getWidth(), canvas.getHeight(), null, Canvas.ALL_SAVE_FLAG);
         onDrawBackground(canvas);
-        onDrawLoud(canvas,layerId);
+        onDrawLoud(canvas);
         onDrawText(canvas);
         canvas.restoreToCount(layerId);
     }
-
     /**
      * 计算手指移动后音量UI占比大小，视其为音量大小
      */
@@ -154,7 +181,6 @@ public class IosColumnAudioView extends View {
             mCurrentLoudRate =0;
         }
     }
-
     /**
      * 画圆弧背景
      * @param canvas
@@ -167,13 +193,11 @@ public class IosColumnAudioView extends View {
         mRectF.bottom=canvas.getHeight();
         canvas.drawRoundRect(mRectF,mRXY,mRXY,mPaint);
     }
-
     /**
      * 画音量背景-方形-随手势上下滑动而变化用来显示音量大小
      * @param canvas
-     * @param layerId
      */
-    private void onDrawLoud(Canvas canvas, int layerId){
+    private void onDrawLoud(Canvas canvas){
         mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
         mPaint.setColor(mColorLoud);
         mRectF.left=0;
@@ -183,52 +207,78 @@ public class IosColumnAudioView extends View {
         canvas.drawRect(mRectF,mPaint);
         mPaint.setXfermode(null);
     }
-
     /**
      * 画文字-展示当前语音大小
      * @param canvas
      */
     private void onDrawText(Canvas canvas){
         mTextLoud = ""+(int)(mCurrentLoudRate * 100);
-//        mPaint.getTextBounds(mTextLoud,0, mTextLoud.length(),mTextLoudRect);
         mPaint.setColor(mTextColor);
-        canvas.drawText( mTextLoud,( canvas.getWidth()/2 - mPaint.measureText(mTextLoud)/2 ), getHeight()/6,mPaint);
+        canvas.drawText( mTextLoud,( canvas.getWidth()/2 - mPaint.measureText(mTextLoud)/2 ), mTextHeight>=0?mTextHeight:getHeight()/6,mPaint);
     }
-
-        /**
-         * 根据手机的分辨率从 dip 的单位 转成为 px(像素)
-         */
-        public int dip2px(Context context, float dpValue) {
-            final float scale = context.getResources().getDisplayMetrics().density;
-            return (int) (dpValue * scale + 0.5f);
+    /**
+     * 将sp值转换为px值，保证文字大小不变
+     */
+    public int sp2px(Context context, float spValue) {
+        final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
+        return (int) (spValue * fontScale + 0.5f);
+    }
+    /**
+     * 监听view视图在window里时，监听系统声音并注册广播
+     */
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        myRegisterReceiver(mContext);
+    }
+    /**
+     * 监听view视图从window里抽离的时，取消广播的注册
+     */
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        unRegisterReceiver();//取消注册系统声音监听
+    }
+    /**
+     * 注册音量广播-监听音量改变事件
+     */
+    private void myRegisterReceiver(Context context) {
+        if(null != context) {
+            mVolumeReceiver = new MyVolumeReceiver();
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(VOLUME_CHANGED_ACTION);
+            context.registerReceiver(mVolumeReceiver, intentFilter);
         }
-
-        /**
-         * 根据手机的分辨率从 px(像素) 的单位 转成为 dp
-         */
-        public int px2dip(Context context, float pxValue) {
-            final float scale = context.getResources().getDisplayMetrics().density;
-            return (int) (pxValue / scale + 0.5f);
+    }
+    /**
+     * 取消广播
+     */
+    private void unRegisterReceiver(){
+        if(mVolumeReceiver!=null) {
+            mContext.unregisterReceiver(mVolumeReceiver);
         }
-        private double px2dip(Context context, double pxValue) {
-            final float scale = context.getResources().getDisplayMetrics().density;
-            return (pxValue / scale + 0.5f);
+    }
+    /**
+     * 继承广播接受者
+     */
+    private class MyVolumeReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+         if (intent.getAction().equals(VOLUME_CHANGED_ACTION)){
+             if(intent.getIntExtra(EXTRA_VOLUME_STREAM_TYPE, -1) == mAudioManagerStreamType){
+                 if(!isMeAdjustVolume) {
+                     mCurrentLoudRate = getCalculateLoudRate();
+                     refreshUI();
+                 }
+             }
+           }
         }
-        /**
-         * 将px值转换为sp值，保证文字大小不变
-         */
-        public int px2sp(Context context, float pxValue) {
-            final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
-            return (int) (pxValue / fontScale + 0.5f);
-        }
-
-        /**
-         * 将sp值转换为px值，保证文字大小不变
-         */
-        public int sp2px(Context context, float spValue) {
-            final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
-            return (int) (spValue * fontScale + 0.5f);
-
+    }
+    /**
+     * 计算音量比例
+     */
+    private double getCalculateLoudRate(){
+        return (double) mAudioManager.getStreamVolume(mAudioManagerStreamType)/ mMaxLoud;
     }
 
 }
