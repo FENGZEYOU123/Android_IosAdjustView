@@ -9,6 +9,10 @@
         <attr name="iosColumnAudioView_setTextColor" format="color"></attr>
         <attr name="iosColumnAudioView_setTextHeight" format="integer|dimension"></attr>
         <attr name="iosColumnAudioView_setIsDrawTextVolume" format="boolean"></attr>
+        <attr name="iosColumnAudioView_setIsDrawDrawableVolume" format="boolean"></attr>
+        <attr name="iosColumnAudioView_setColorVolumeDrawable" format="color"></attr>
+
+
         <attr name="iosColumnAudioView_setAudioStreamType"   format="integer">
             <enum name="STREAM_DEFAULT" value="-1"></enum>
             <enum name="STREAM_VOICE_CALL" value="0"></enum>

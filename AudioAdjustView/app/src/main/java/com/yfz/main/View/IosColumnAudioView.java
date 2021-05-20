@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.media.AudioManager;
 import android.util.AttributeSet;
@@ -28,6 +29,8 @@ import com.yfz.main.R;
  */
 public class IosColumnAudioView extends View {
     private Context mContext;
+    //日志TAG
+    private static final String TAG = IosColumnAudioView.class.getName();
     //系统声音广播名
     private static final String VOLUME_CHANGED_ACTION = "android.media.VOLUME_CHANGED_ACTION";
     private static final String EXTRA_VOLUME_STREAM_TYPE = "android.media.EXTRA_VOLUME_STREAM_TYPE";
@@ -53,6 +56,16 @@ public class IosColumnAudioView extends View {
     private RectF mRectF;
     //当前Canvas LayerId
     private int layerId = 0;
+    //音量图标位置
+    private RectF mRectVolumeDrawable=new RectF();
+    //音量图标margin
+    private final static int mRectVolumeDrawableMargin=10;
+    //音量图标粗细
+    private final static int mRectVolumeDrawableWidth=4;
+    //音量图标开始角度
+    private final static int mRectVolumeDrawableStartAngle=315;
+    //音量图标终止角度
+    private final static int mRectVolumeDrawableEndAngle=90;
     /**
      * 设置声音流类型-默认音乐-iosColumnAudioView_setAudioStreamType
      */
@@ -69,6 +82,12 @@ public class IosColumnAudioView extends View {
      * 设置组件背景颜色-xml-iosColumnAudioView_setColorBackground
      */
     private int mColorBackground = Color.DKGRAY;
+
+    /**
+     * 设置是否画音量文字-iosColumnAudioView_setIsDrawTextVolume
+     * @param context
+     */
+    private boolean mIsDrawTextVolume = true;
     /**
      * 设置文字大小-xml-iosColumnAudioView_setTextSize
      */
@@ -83,10 +102,15 @@ public class IosColumnAudioView extends View {
      */
     private int mTextHeight = -1;
     /**
-     * 设置是否画音量文字-iosColumnAudioView_setIsDrawTextVolume
+     * 设置是否画音量图标-iosColumnAudioView_setIsDrawDrawableVolume
      * @param context
      */
-    private boolean mIsDrawTextVolume = true;
+    private boolean mIsDrawDrawableVolume = true;
+    /**
+     * 设置音量图标颜色-xml-iosColumnAudioView_setColorVolumeDrawable
+     */
+    private int mColorVolumeDrawable = Color.DKGRAY;
+
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -105,6 +129,8 @@ public class IosColumnAudioView extends View {
         mTextColor = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextColor,mTextColor);
         mTextHeight = typedArray.getInt(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextHeight,mTextHeight);
         mIsDrawTextVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawTextVolume,mIsDrawTextVolume);
+        mIsDrawDrawableVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawDrawableVolume,mIsDrawDrawableVolume);
+        mColorVolumeDrawable = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorVolumeDrawable,mColorVolumeDrawable);
         initial(context);
     }
 
@@ -176,6 +202,7 @@ public class IosColumnAudioView extends View {
         onDrawBackground(canvas); //画背景
         onDrawLoud(canvas); //画当前音量前景表示当前多大音量
         onDrawText(canvas); //画文字
+        onDrawVolumeDrawable(canvas);//画底部音量图标
         canvas.restoreToCount(layerId);
     }
     /**
@@ -195,6 +222,7 @@ public class IosColumnAudioView extends View {
      * @param canvas
      */
     private void onDrawBackground(Canvas canvas){
+        mPaint.setStyle(Paint.Style.FILL);
         mPaint.setColor(mColorBackground );
         mRectF.left=0;
         mRectF.top=0;
@@ -207,6 +235,7 @@ public class IosColumnAudioView extends View {
      * @param canvas
      */
     private void onDrawLoud(Canvas canvas){
+        mPaint.setStyle(Paint.Style.FILL);
         mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
         mPaint.setColor(mColorLoud);
         mRectF.left=0;
@@ -222,10 +251,37 @@ public class IosColumnAudioView extends View {
      */
     private void onDrawText(Canvas canvas){
         if(mIsDrawTextVolume) { //如果开启了则开始绘制
+            mPaint.setStyle(Paint.Style.FILL);
             mTextLoud = "" + (int) (mCurrentLoudRate * 100);
             mPaint.setColor(mTextColor);
             canvas.drawText(mTextLoud, (canvas.getWidth() / 2 - mPaint.measureText(mTextLoud) / 2), mTextHeight >= 0 ? mTextHeight : getHeight() / 6, mPaint);
         }
+    }
+    /**
+     * 画音量图标
+     */
+    private void onDrawVolumeDrawable(Canvas canvas){
+        if(mIsDrawDrawableVolume){ //如果开启了则开始绘制
+            mRectVolumeDrawable.left=mRectVolumeDrawableMargin;
+            mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin;
+            mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin;
+            mRectVolumeDrawable.top=mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin*2;
+            mPaint.setColor(mColorVolumeDrawable);
+            onDrawVolumeDrawableArc(canvas); //画圆弧
+        }
+    }
+    /**
+     * 画音量图标-圆弧
+     */
+    private void onDrawVolumeDrawableArc(Canvas canvas){
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
+        canvas.drawArc(
+                mRectVolumeDrawable,
+                (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1-mCurrentLoudRate))),
+                (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1-mCurrentLoudRate) )),
+                false,mPaint);
+
     }
     /**
      * 将sp值转换为px值，保证文字大小不变
