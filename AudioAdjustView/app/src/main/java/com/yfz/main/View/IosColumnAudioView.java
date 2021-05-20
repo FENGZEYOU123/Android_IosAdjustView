@@ -51,6 +51,8 @@ public class IosColumnAudioView extends View {
     private Paint mPaint;
     //位置
     private RectF mRectF;
+    //当前Canvas LayerId
+    private int layerId = 0;
     /**
      * 设置声音流类型-默认音乐-iosColumnAudioView_setAudioStreamType
      */
@@ -80,6 +82,11 @@ public class IosColumnAudioView extends View {
      * @param context
      */
     private int mTextHeight = -1;
+    /**
+     * 设置是否展示音量文字-iosColumnAudioView_setIsDrawTextVolume
+     * @param context
+     */
+    private boolean mIsDrawTextVolume = true;
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -97,6 +104,7 @@ public class IosColumnAudioView extends View {
         mTextSize = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextSize,mTextSize);
         mTextColor = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextColor,mTextColor);
         mTextHeight = typedArray.getInt(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextHeight,mTextHeight);
+        mIsDrawTextVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawTextVolume,mIsDrawTextVolume);
         initial(context);
     }
 
@@ -116,7 +124,6 @@ public class IosColumnAudioView extends View {
         setBackgroundColor(Color.TRANSPARENT);
         mPaint.setTextSize(mTextSize);
     }
-
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -163,10 +170,10 @@ public class IosColumnAudioView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        int layerId=canvas.saveLayer(0, 0, canvas.getWidth(), canvas.getHeight(), null, Canvas.ALL_SAVE_FLAG);
-        onDrawBackground(canvas);
-        onDrawLoud(canvas);
-        onDrawText(canvas);
+        layerId = canvas.saveLayer(0, 0, canvas.getWidth(), canvas.getHeight(), null, Canvas.ALL_SAVE_FLAG);
+        onDrawBackground(canvas); //画背景
+        onDrawLoud(canvas); //画当前音量前景表示当前多大音量
+        onDrawText(canvas); //画文字
         canvas.restoreToCount(layerId);
     }
     /**
@@ -212,9 +219,11 @@ public class IosColumnAudioView extends View {
      * @param canvas
      */
     private void onDrawText(Canvas canvas){
-        mTextLoud = ""+(int)(mCurrentLoudRate * 100);
-        mPaint.setColor(mTextColor);
-        canvas.drawText( mTextLoud,( canvas.getWidth()/2 - mPaint.measureText(mTextLoud)/2 ), mTextHeight>=0?mTextHeight:getHeight()/6,mPaint);
+        if(mIsDrawTextVolume) { //如果开启了则开始绘制
+            mTextLoud = "" + (int) (mCurrentLoudRate * 100);
+            mPaint.setColor(mTextColor);
+            canvas.drawText(mTextLoud, (canvas.getWidth() / 2 - mPaint.measureText(mTextLoud) / 2), mTextHeight >= 0 ? mTextHeight : getHeight() / 6, mPaint);
+        }
     }
     /**
      * 将sp值转换为px值，保证文字大小不变
