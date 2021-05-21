@@ -1,4 +1,4 @@
-package com.yfz.main.View;
+package com.yfz.main;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -11,14 +11,12 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
+import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import androidx.annotation.Nullable;
-
-import com.yfz.main.R;
 
 /**
  * 作者：游丰泽
@@ -108,10 +106,15 @@ public class IosColumnAudioView extends View {
      */
     private boolean mIsDrawDrawableVolume = true;
     /**
-     * 设置音量图标颜色-xml-iosColumnAudioView_setColorVolumeDrawable
+     * 设置音量圆弧颜色-xml-iosColumnAudioView_setColorVolume
      */
-    private int mColorVolumeDrawable = Color.DKGRAY;
-
+    private int mColorVolume = Color.DKGRAY;
+    /**
+     * 设置音量静音图标drawable-xml-iosColumnAudioView_setColorVolumeDrawable
+     */
+    private Drawable mColorDrawable = null;
+    //固定组件高度长度，这里不做适配，可自行修改
+    private int mViewHeight = 200, mViewWeight=50;
 
     public IosColumnAudioView(Context context) {
         super(context);
@@ -131,7 +134,8 @@ public class IosColumnAudioView extends View {
         mTextHeight = typedArray.getInt(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextHeight,mTextHeight);
         mIsDrawTextVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawTextVolume,mIsDrawTextVolume);
         mIsDrawDrawableVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawDrawableVolume,mIsDrawDrawableVolume);
-        mColorVolumeDrawable = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorVolumeDrawable,mColorVolumeDrawable);
+        mColorVolume = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeColor, mColorVolume);
+        mColorDrawable = typedArray.getDrawable(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeDrawable);
         initial(context);
     }
 
@@ -139,6 +143,8 @@ public class IosColumnAudioView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mRectVolumeDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/10;
+        //固定组件高度长度，这里不做适配，可自行修改
+        setMeasuredDimension(dp2px(mContext,mViewWeight),dp2px(mContext,mViewHeight));
     }
 
     private void initial(Context context){
@@ -266,12 +272,16 @@ public class IosColumnAudioView extends View {
         if(mIsDrawDrawableVolume){ //如果开启了则开始绘制
             mPaint.setStyle(Paint.Style.STROKE);
             mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
-            mPaint.setColor(mColorVolumeDrawable);
-            onDrawVolumeDrawableArc(canvas); //画音量圆弧
+            mPaint.setColor(mColorVolume);
+           if (getCalculateLoudRate()>0){ //如果当前实际系统音量>0，则绘圆弧，否则绘制静音图片
+               onDrawVolumeDrawableArc(canvas); //画音量圆弧
+           }else if (getCalculateLoudRate() == 0 && mColorDrawable != null){
+
+           }
         }
     }
     /**
-     * 画音量图标-圆弧
+     * 画音量图标-圆弧-计算多少个，这里是展示4个
      */
     private void onDrawVolumeDrawableArc(Canvas canvas){
         for(int i = 0; i<=(int)(mCurrentDrawLoudRate /0.33); i++){
@@ -363,5 +373,11 @@ public class IosColumnAudioView extends View {
     private double getCalculateLoudRate(){
         return (double) mAudioManager.getStreamVolume(mAudioManagerStreamType)/ mMaxLoud;
     }
-
+    /**
+     * 根据手机的分辨率从 dp 的单位 转成为 px(像素)
+     */
+    public static int dp2px(Context context, float dpValue) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
+    }
 }

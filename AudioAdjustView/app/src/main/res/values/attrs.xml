@@ -10,7 +10,8 @@
         <attr name="iosColumnAudioView_setTextHeight" format="integer|dimension"></attr>
         <attr name="iosColumnAudioView_setIsDrawTextVolume" format="boolean"></attr>
         <attr name="iosColumnAudioView_setIsDrawDrawableVolume" format="boolean"></attr>
-        <attr name="iosColumnAudioView_setColorVolumeDrawable" format="color"></attr>
+        <attr name="iosColumnAudioView_setVolumeColor" format="color"></attr>
+        <attr name="iosColumnAudioView_setVolumeDrawable" format="reference"></attr>
 
 
         <attr name="iosColumnAudioView_setAudioStreamType"   format="integer">
