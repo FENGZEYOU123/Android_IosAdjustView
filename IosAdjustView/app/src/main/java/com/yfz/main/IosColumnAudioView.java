@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -55,8 +56,10 @@ public class IosColumnAudioView extends View {
     private RectF mRectF;
     //当前Canvas LayerId
     private int layerId = 0;
-    //音量图标位置
-    private RectF mRectVolumeDrawable=new RectF();
+    //音量图标圆弧位置
+    private RectF mRectVolumeArc =new RectF();
+    //音量图标静音位置
+    private Rect mRectVolumeDrawable=new Rect();
     //音量图标margin
     private int mRectVolumeDrawableMargin=10;
     //音量图标粗细
@@ -276,9 +279,22 @@ public class IosColumnAudioView extends View {
            if (getCalculateLoudRate()>0){ //如果当前实际系统音量>0，则绘圆弧，否则绘制静音图片
                onDrawVolumeDrawableArc(canvas); //画音量圆弧
            }else if (getCalculateLoudRate() == 0 && mColorDrawable != null){
-
+               onDrawVolumeMutedDrawable(canvas);
            }
         }
+    }
+
+    /**
+     * 画音量图片-静音drawable
+     */
+    private void onDrawVolumeMutedDrawable(Canvas canvas){
+
+        mRectVolumeDrawable.left=mRectVolumeDrawableMargin * 3;
+        mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin * 3;
+        mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin * 3;
+        mRectVolumeDrawable.top= (int)(mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin *2 *3);
+        mColorDrawable.setBounds(mRectVolumeDrawable);
+        mColorDrawable.draw(canvas);
     }
     /**
      * 画音量图标-圆弧-计算多少个，这里是展示4个
@@ -294,15 +310,15 @@ public class IosColumnAudioView extends View {
      */
     private void onDrawVolumeDrawableArc(Canvas canvas, int index){
         index=4-index;
-        mRectVolumeDrawable.left=mRectVolumeDrawableMargin * index;
-        mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin * index;
-        mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin * index;
-        mRectVolumeDrawable.top=mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin *2 *index;
+        mRectVolumeArc.left=mRectVolumeDrawableMargin * index;
+        mRectVolumeArc.right=canvas.getWidth()-mRectVolumeDrawableMargin * index;
+        mRectVolumeArc.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin * index;
+        mRectVolumeArc.top= mRectVolumeArc.bottom-canvas.getWidth()+mRectVolumeDrawableMargin *2 *index;
         //画板偏移
         canvas.translate(-mRectVolumeDrawableMargin,0);
         //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着音量扩大而扩大，缩小而缩小的感觉
         canvas.drawArc(
-                mRectVolumeDrawable,
+                mRectVolumeArc,
                 (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1- mCurrentDrawLoudRate))),
                 (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1- mCurrentDrawLoudRate))),
                 false,
