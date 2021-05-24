@@ -7,17 +7,36 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.yfz.main.IosColumnAudioView
+    <LinearLayout
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:iosColumnAudioView_setColorLoud="@color/colorLoud"
-        app:iosColumnAudioView_setColorBackground="@color/colorBackground"
-        app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
-        app:iosColumnAudioView_setVolumeDrawable="@drawable/icon_ban_audio"
-        android:layout_width="50dp"
-        android:layout_height="200dp">
-    </com.yfz.main.IosColumnAudioView>
+         app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <com.yfz.main.IosColumnAudioView
+            android:id="@+id/ios_audio"
+            android:layout_margin="20dp"
+            app:iosColumnAudioView_setColorLoud="@color/colorLoud"
+            app:iosColumnAudioView_setColorBackground="@color/colorBackground"
+            app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
+            app:iosColumnAudioView_setVolumeDrawable="@drawable/icon_ban_audio"
+            android:layout_width="50dp"
+            android:layout_height="200dp">
+        </com.yfz.main.IosColumnAudioView>
+
+        <com.yfz.main.IosColumnBrightnessView
+            android:id="@+id/ios_brightness"
+            android:layout_margin="20dp"
+            app:iosColumnAudioView_setColorLoud="@color/colorLoud"
+            app:iosColumnAudioView_setColorBackground="@color/colorBackground"
+            app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
+            app:iosColumnAudioView_setVolumeDrawable="@drawable/icon_ban_audio"
+            android:layout_width="50dp"
+            android:layout_height="200dp">
+        </com.yfz.main.IosColumnBrightnessView>
+    </LinearLayout>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
