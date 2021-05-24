@@ -1,10 +1,7 @@
 package com.yfz.main;
 
-import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.res.TypedArray;
 import android.database.ContentObserver;
 import android.graphics.Canvas;
@@ -17,6 +14,7 @@ import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -41,12 +39,16 @@ public class IosColumnBrightnessView extends View {
     private BrightnessObserver mBrightnessObserver = null;
     //标记-是否是当前自己在调整亮度大小
     private boolean isMeAdjustVolume = true;
+    //当前圆心半径
+    private double mCircleRadius = 0;
+    //当前圆心边长
+    private double mCircleMaxWidth = 0;
     //当前UI高度与view高度的比例
     private double mCurrentDrawLoudRate = 0;
     //当前真实亮度与总亮度大小比例
     private double mCurrentRealLoudRate = 0;
     //系统最大亮度index-默认255
-    private int mMaxBrightness = 255;
+    private final int mMaxBrightness = 255;
     //记录按压时手指相对于组件view的高度
     private float mDownY;
     //手指移动的距离，视为亮度调整
@@ -122,7 +124,7 @@ public class IosColumnBrightnessView extends View {
      */
     private Drawable mColorDrawable = null;
     //固定组件高度长度，这里不做适配，可自行修改
-    private int mViewHeight = 200, mViewWeight=50;
+    private int mViewHeight = 150, mViewWeight=50;
 
     public IosColumnBrightnessView(Context context) {
         super(context);
@@ -151,6 +153,7 @@ public class IosColumnBrightnessView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mRectVolumeDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/10;
+        mCircleMaxWidth = MeasureSpec.getSize(widthMeasureSpec)/2;
         //固定组件高度长度，这里不做适配，可自行修改
         setMeasuredDimension(dp2px(mContext,mViewWeight),dp2px(mContext,mViewHeight));
     }
@@ -158,7 +161,6 @@ public class IosColumnBrightnessView extends View {
     private void initial(Context context){
         mContext=context;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mMaxBrightness = getSystemBrightness();
         mCurrentDrawLoudRate = getCalculateLoudRate();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setAntiAlias(true);
@@ -167,6 +169,7 @@ public class IosColumnBrightnessView extends View {
         setWillNotDraw(false);
         setBackgroundColor(Color.TRANSPARENT);
         mPaint.setTextSize(mTextSize);
+        getPermission();
     }
 
     @Override
@@ -199,13 +202,6 @@ public class IosColumnBrightnessView extends View {
         refreshUI();
     }
     /**
-     * 设置系统亮度
-     * @param currentVolume
-     */
-    public void refreshBrightness(int currentVolume){
-        mAudioManager.setStreamVolume(mAudioManagerStreamType,currentVolume, 0);
-    }
-    /**
      * 刷新UI
      */
     public void refreshUI(){
@@ -216,9 +212,9 @@ public class IosColumnBrightnessView extends View {
         super.onDraw(canvas);
         layerId = canvas.saveLayer(0, 0, canvas.getWidth(), canvas.getHeight(), null, Canvas.ALL_SAVE_FLAG);
         onDrawBackground(canvas); //画背景
-        onDrawLoud(canvas); //画当前亮度前景表示当前多大亮度
+        onDrawFront(canvas); //画当前亮度前景表示当前多大亮度
         onDrawText(canvas); //画文字
-        onDrawVolumeDrawable(canvas);//画底部亮度图标
+        onDrawSunCircle(canvas);//画底部图标圆心
         canvas.restoreToCount(layerId);
     }
     /**
@@ -250,7 +246,7 @@ public class IosColumnBrightnessView extends View {
      * 画亮度背景-方形-随手势上下滑动而变化用来显示亮度大小
      * @param canvas
      */
-    private void onDrawLoud(Canvas canvas){
+    private void onDrawFront(Canvas canvas){
         mPaint.setStyle(Paint.Style.FILL);
         mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
         mPaint.setColor(mColorLoud);
@@ -276,16 +272,21 @@ public class IosColumnBrightnessView extends View {
     /**
      * 画亮度图标
      */
-    private void onDrawVolumeDrawable(Canvas canvas){
+    private void onDrawSunCircle(Canvas canvas){
         if(mIsDrawDrawableVolume){ //如果开启了则开始绘制
-            mPaint.setStyle(Paint.Style.STROKE);
+            mPaint.setStyle(Paint.Style.FILL);
             mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
             mPaint.setColor(mColorVolume);
-           if (getCalculateLoudRate()>0){ //如果当前实际系统亮度>0，则绘圆弧，否则绘制静音图片
-               onDrawVolumeDrawableArc(canvas); //画亮度圆弧
-           }else if (getCalculateLoudRate() == 0 && mColorDrawable != null){
-               onDrawVolumeMutedDrawable(canvas);
-           }
+            mCircleRadius=(1-mCurrentDrawLoudRate ) *2;
+            Log.d(TAG, "onDrawSunCircle: "+mCurrentDrawLoudRate + "   "+mCircleRadius);
+
+            mRectF.left= (float)(( mCircleMaxWidth-mRectVolumeDrawableMargin) * mCircleRadius );
+            mRectF.right=(float)( canvas.getWidth()-( mCircleMaxWidth-mRectVolumeDrawableMargin) * mCircleRadius) ;
+//            mCircleWidth=
+            mRectF.bottom=(float)((canvas.getHeight()*0.9)-( mCircleMaxWidth-mRectVolumeDrawableMargin) * mCircleRadius);
+            mRectF.top=(float)( (mRectF.bottom-canvas.getWidth()+( mCircleMaxWidth-mRectVolumeDrawableMargin) *2  * mCircleRadius));
+//            canvas.drawCircle(canvas.getWidth()/2,(float) (canvas.getHeight()*0.9-mRectVolumeDrawableMargin),3,mPaint);
+            canvas.drawArc(mRectF,0f,360f,false,mPaint);
         }
     }
 
@@ -385,8 +386,7 @@ public class IosColumnBrightnessView extends View {
      * 改变当前系统亮度
      * @return
      */
-    public void setSystemBrightness(int brightness){
-        Log.d(TAG, "setSystemBrightness: "+brightness);
+    public void setSystemBrightness(int brightness) {
         if(null != mContext) {
             if(brightness>=mMaxBrightness){
                 brightness=mMaxBrightness;
@@ -431,5 +431,20 @@ public class IosColumnBrightnessView extends View {
     public int sp2px(Context context, float spValue) {
         final float fontScale = context.getResources().getDisplayMetrics().scaledDensity;
         return (int) (spValue * fontScale + 0.5f);
+    }
+    /**
+     *
+     */
+    private void getPermission(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.System.canWrite(mContext)) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+                intent.setData(Uri.parse("package:" + mContext.getPackageName()));
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                mContext.startActivity(intent);
+            } else {
+                // 申请权限后做的操作
+            }
+        }
     }
 }
