@@ -117,7 +117,7 @@ public class IosColumnAudioView extends View {
      */
     private Drawable mColorDrawable = null;
     //固定组件高度长度，这里不做适配，可自行修改
-    private int mViewHeight = 200, mViewWeight=50;
+    private int mViewHeight = 150, mViewWeight=50;
 
     public IosColumnAudioView(Context context) {
         super(context);
