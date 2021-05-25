@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.ContentObserver;
-import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -31,6 +30,7 @@ import androidx.annotation.Nullable;
  * 简介：仿ios风格的亮度控制view
  * CSDN: https://blog.csdn.net/ruiruiddd
  * GITHUB: https://github.com/FENGZEYOU123
+ * Android技术生活-QQ交流群:723592501
  */
 public class IosColumnBrightnessView extends View {
     private Context mContext;
@@ -38,8 +38,6 @@ public class IosColumnBrightnessView extends View {
     private static final String TAG = IosColumnBrightnessView.class.getName();
     //系统亮度监听
     private BrightnessObserver mBrightnessObserver = null;
-    //标记-是否是当前自己在调整亮度大小
-    private boolean isMeAdjustVolume = true;
     //当前圆心最大半径
     private float mCircleMaxRadius = 0;
     //当前圆心最小半径
@@ -48,8 +46,6 @@ public class IosColumnBrightnessView extends View {
     private float mCircleMaxWidth = 0;
     //当前UI高度与view高度的比例
     private double mCurrentDrawLoudRate = 0;
-    //当前真实亮度与总亮度大小比例
-    private double mCurrentRealLoudRate = 0;
     //系统最大亮度index-默认255
     private final int mMaxBrightness = 255;
     //记录按压时手指相对于组件view的高度
@@ -66,18 +62,10 @@ public class IosColumnBrightnessView extends View {
     private RectF mRectF;
     //当前Canvas LayerId
     private int layerId = 0;
-    //亮度图标圆弧位置
-    private RectF mRectVolumeArc =new RectF();
-    //亮度图标静音位置
-    private Rect mRectVolumeDrawable=new Rect();
     //亮度图标margin
     private int mRectVolumeDrawableMargin=10;
     //亮度图标粗细
     private final static int mRectVolumeDrawableWidth=4;
-    //亮度图标开始角度
-    private final static int mRectVolumeDrawableStartAngle=315;
-    //亮度图标终止角度
-    private final static int mRectVolumeDrawableEndAngle=90;
     /**
      * 设置声音流类型-默认音乐-iosColumnAudioView_setAudioStreamType
      */
@@ -165,7 +153,7 @@ public class IosColumnBrightnessView extends View {
     private void initial(Context context){
         mContext=context;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mCurrentDrawLoudRate = getCalculateLoudRate();
+        mCurrentDrawLoudRate = getCalculateBrightnessRate();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
@@ -184,7 +172,6 @@ public class IosColumnBrightnessView extends View {
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 mDownY=event.getY();
-                isMeAdjustVolume=true;
                 break;
             case MotionEvent.ACTION_MOVE:
                 mMoveDistance = mDownY - event.getY();
@@ -192,7 +179,6 @@ public class IosColumnBrightnessView extends View {
                 mDownY=event.getY();
                 break;
             case MotionEvent.ACTION_UP:
-                isMeAdjustVolume=false;
                 break;
             default:
                 break;
@@ -349,6 +335,7 @@ public class IosColumnBrightnessView extends View {
         }
         @Override
         public void onChange(boolean selfChange) {
+            //selfChange 一直是false，无法区分是自己手动改变还是通过系统设置调节，有bug。
             super.onChange(selfChange);
         }
     }
@@ -386,7 +373,7 @@ public class IosColumnBrightnessView extends View {
     /**
      * 计算亮度比例
      */
-    private double getCalculateLoudRate(){
+    private double getCalculateBrightnessRate(){
         return (double) mAudioManager.getStreamVolume(mAudioManagerStreamType)/ mMaxBrightness;
     }
     /**
