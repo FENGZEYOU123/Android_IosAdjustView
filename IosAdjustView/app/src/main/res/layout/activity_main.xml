@@ -36,6 +36,7 @@
             android:layout_width="50dp"
             android:layout_height="200dp">
         </com.yfz.main.IosColumnBrightnessView>
+
     </LinearLayout>
 
 

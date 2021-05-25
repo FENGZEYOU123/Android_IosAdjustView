@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.TypedArray;
 import android.database.ContentObserver;
+import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -39,10 +40,12 @@ public class IosColumnBrightnessView extends View {
     private BrightnessObserver mBrightnessObserver = null;
     //标记-是否是当前自己在调整亮度大小
     private boolean isMeAdjustVolume = true;
-    //当前圆心半径
-    private double mCircleRadius = 0;
+    //当前圆心最大半径
+    private float mCircleMaxRadius = 0;
+    //当前圆心最小半径
+    private float mCircleMinRadius = 0;
     //当前圆心边长
-    private double mCircleMaxWidth = 0;
+    private float mCircleMaxWidth = 0;
     //当前UI高度与view高度的比例
     private double mCurrentDrawLoudRate = 0;
     //当前真实亮度与总亮度大小比例
@@ -146,6 +149,8 @@ public class IosColumnBrightnessView extends View {
         mIsDrawDrawableVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawDrawableVolume,mIsDrawDrawableVolume);
         mColorVolume = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeColor, mColorVolume);
         mColorDrawable = typedArray.getDrawable(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeDrawable);
+        typedArray.recycle();
+
         initial(context);
     }
 
@@ -153,7 +158,6 @@ public class IosColumnBrightnessView extends View {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         mRectVolumeDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/10;
-        mCircleMaxWidth = MeasureSpec.getSize(widthMeasureSpec)/2;
         //固定组件高度长度，这里不做适配，可自行修改
         setMeasuredDimension(dp2px(mContext,mViewWeight),dp2px(mContext,mViewHeight));
     }
@@ -170,6 +174,9 @@ public class IosColumnBrightnessView extends View {
         setBackgroundColor(Color.TRANSPARENT);
         mPaint.setTextSize(mTextSize);
         getPermission();
+        stopAutoBrightness(mContext);
+//        setLayerType(LAYER_TYPE_SOFTWARE, null);
+
     }
 
     @Override
@@ -270,65 +277,32 @@ public class IosColumnBrightnessView extends View {
         }
     }
     /**
-     * 画亮度图标
+     * 画亮度图标-太阳圆心
      */
     private void onDrawSunCircle(Canvas canvas){
         if(mIsDrawDrawableVolume){ //如果开启了则开始绘制
             mPaint.setStyle(Paint.Style.FILL);
             mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
             mPaint.setColor(mColorVolume);
-            mCircleRadius=(1-mCurrentDrawLoudRate ) *2;
-            Log.d(TAG, "onDrawSunCircle: "+mCurrentDrawLoudRate + "   "+mCircleRadius);
-
-            mRectF.left= (float)(( mCircleMaxWidth-mRectVolumeDrawableMargin) * mCircleRadius );
-            mRectF.right=(float)( canvas.getWidth()-( mCircleMaxWidth-mRectVolumeDrawableMargin) * mCircleRadius) ;
-//            mCircleWidth=
-            mRectF.bottom=(float)((canvas.getHeight()*0.9)-( mCircleMaxWidth-mRectVolumeDrawableMargin) * mCircleRadius);
-            mRectF.top=(float)( (mRectF.bottom-canvas.getWidth()+( mCircleMaxWidth-mRectVolumeDrawableMargin) *2  * mCircleRadius));
-//            canvas.drawCircle(canvas.getWidth()/2,(float) (canvas.getHeight()*0.9-mRectVolumeDrawableMargin),3,mPaint);
-            canvas.drawArc(mRectF,0f,360f,false,mPaint);
+            mCircleMaxRadius = (float) (Math.sqrt(canvas.getWidth()) * 1.5);
+            mCircleMinRadius = (float) (Math.sqrt(canvas.getWidth()) * 1);
+            mCircleMaxWidth = (float) mCurrentDrawLoudRate * (mCircleMaxRadius-mCircleMinRadius)+mCircleMinRadius;
+            canvas.drawCircle(canvas.getWidth()/2,(float) (canvas.getHeight()*0.8-mRectVolumeDrawableMargin), mCircleMaxWidth,mPaint);
+            onDrawSunRays(canvas,canvas.getWidth()/2,(float) (canvas.getHeight()*0.8-mRectVolumeDrawableMargin));
         }
     }
 
     /**
-     * 画亮度图片-静音drawable
+     * 画亮度图标-太阳光芒
      */
-    private void onDrawVolumeMutedDrawable(Canvas canvas){
-
-        mRectVolumeDrawable.left=mRectVolumeDrawableMargin * 3;
-        mRectVolumeDrawable.right=canvas.getWidth()-mRectVolumeDrawableMargin * 3;
-        mRectVolumeDrawable.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin * 3;
-        mRectVolumeDrawable.top= (int)(mRectVolumeDrawable.bottom-canvas.getWidth()+mRectVolumeDrawableMargin *2 *3);
-        mColorDrawable.setBounds(mRectVolumeDrawable);
-        mColorDrawable.draw(canvas);
-    }
-    /**
-     * 画亮度图标-圆弧-计算多少个，这里是展示4个
-     */
-    private void onDrawVolumeDrawableArc(Canvas canvas){
-        for(int i = 0; i<=(int)(mCurrentDrawLoudRate /0.33); i++){
-                onDrawVolumeDrawableArc(canvas,(int)(mCurrentDrawLoudRate /0.33)-i); //画圆弧
-            }
-    }
-
-    /**
-     * 画亮度图标-圆弧
-     */
-    private void onDrawVolumeDrawableArc(Canvas canvas, int index){
-        index=4-index;
-        mRectVolumeArc.left=mRectVolumeDrawableMargin * index;
-        mRectVolumeArc.right=canvas.getWidth()-mRectVolumeDrawableMargin * index;
-        mRectVolumeArc.bottom=(int)(canvas.getHeight()*0.9)-mRectVolumeDrawableMargin * index;
-        mRectVolumeArc.top= mRectVolumeArc.bottom-canvas.getWidth()+mRectVolumeDrawableMargin *2 *index;
-        //画板偏移
-        canvas.translate(-mRectVolumeDrawableMargin,0);
-        //开始角度向 360度收缩，结束角度向0度收缩，这样就可以造成弧度随着亮度扩大而扩大，缩小而缩小的感觉
-        canvas.drawArc(
-                mRectVolumeArc,
-                (float) (mRectVolumeDrawableStartAngle + ( (360 - mRectVolumeDrawableStartAngle) * (1- mCurrentDrawLoudRate))),
-                (float) (mRectVolumeDrawableEndAngle - ( (mRectVolumeDrawableEndAngle-0) * (1- mCurrentDrawLoudRate))),
-                false,
-                mPaint);
+    private void onDrawSunRays(Canvas canvas,float cx,float cy){
+        mPaint.setStrokeCap(Paint.Cap.ROUND); // 定义线段断电形状为圆头
+        //绘制时刻度
+        canvas.translate(cx,cy);
+        for (int i = 0; i < 10; i++) {
+            canvas.drawLine(mCircleMaxWidth, mCircleMaxWidth, (float)(mCircleMaxWidth+5*mCurrentDrawLoudRate),(float)( mCircleMaxWidth+5*mCurrentDrawLoudRate), mPaint);
+            canvas.rotate(36);
+        }
 
     }
 
@@ -358,27 +332,24 @@ public class IosColumnBrightnessView extends View {
      * 监听亮度改变
      */
     private class BrightnessObserver extends ContentObserver {
-
         private Context mContext;
-
         public BrightnessObserver(Context context, Handler handler) {
             super(handler);
             this.mContext =context;
             register();
         }
-
+        //注册监听
         public void register(){
             Uri brightnessUri = Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS);
             mContext.getContentResolver().registerContentObserver(brightnessUri, true,this);
         }
+        //取消注册监听
         public void unregister(){
             mContext.getContentResolver().unregisterContentObserver(this);
         }
-
         @Override
         public void onChange(boolean selfChange) {
             super.onChange(selfChange);
-            Log.d(TAG, "onChange: "+getSystemBrightness());
         }
     }
 
@@ -447,4 +418,14 @@ public class IosColumnBrightnessView extends View {
             }
         }
     }
+    /**
+     * 停止自动亮度调节
+     */
+    private void stopAutoBrightness(Context context) {
+        Settings.System.putInt(context.getContentResolver(),
+                Settings.System.SCREEN_BRIGHTNESS_MODE,
+                Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL);
+    }
+
+
 }

@@ -20,7 +20,7 @@ import android.view.View;
 import androidx.annotation.Nullable;
 
 /**
- * 作者：游丰泽
+ * 作者：YFZ
  * 简介：仿ios风格的音量控制view
  * CSDN: https://blog.csdn.net/ruiruiddd
  * GITHUB: https://github.com/FENGZEYOU123
@@ -139,6 +139,7 @@ public class IosColumnAudioView extends View {
         mIsDrawDrawableVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawDrawableVolume,mIsDrawDrawableVolume);
         mColorVolume = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeColor, mColorVolume);
         mColorDrawable = typedArray.getDrawable(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeDrawable);
+        typedArray.recycle();
         initial(context);
     }
 
