@@ -71,11 +71,11 @@ public class IosColumnBrightnessView extends View {
     /**
      * 设置当前亮度颜色-xml-iosColumnAudioView_setColorLoud
      */
-    private int mColorLoud = Color.GRAY;
+    private int mColorLoud = Color.parseColor("#ECECEC");
     /**
      * 设置组件背景颜色-xml-iosColumnAudioView_setColorBackground
      */
-    private int mColorBackground = Color.DKGRAY;
+    private int mColorBackground = Color.parseColor("#898989");
 
     /**
      * 设置是否画亮度文字-iosColumnAudioView_setIsDrawTextVolume

@@ -18,8 +18,6 @@
         <com.yfz.main.IosColumnAudioView
             android:id="@+id/ios_audio"
             android:layout_margin="20dp"
-            app:iosColumnAudioView_setColorLoud="@color/colorLoud"
-            app:iosColumnAudioView_setColorBackground="@color/colorBackground"
             app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
             app:iosColumnAudioView_setVolumeDrawable="@drawable/icon_ban_audio"
             android:layout_width="50dp"
@@ -29,10 +27,7 @@
         <com.yfz.main.IosColumnBrightnessView
             android:id="@+id/ios_brightness"
             android:layout_margin="20dp"
-            app:iosColumnAudioView_setColorLoud="@color/colorLoud"
-            app:iosColumnAudioView_setColorBackground="@color/colorBackground"
-            app:iosColumnAudioView_setRadiusXY="@dimen/ios_column_audio_view_radius"
-            app:iosColumnAudioView_setVolumeDrawable="@drawable/icon_ban_audio"
+            app:iosColumnBrightnessView_setRadiusXY="@dimen/ios_column_audio_view_radius"
             android:layout_width="50dp"
             android:layout_height="200dp">
         </com.yfz.main.IosColumnBrightnessView>
