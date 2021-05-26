@@ -25,8 +25,8 @@ import androidx.annotation.Nullable;
 /**
  * 作者：游丰泽
  * 简介：仿ios风格的亮度控制view
- * CSDN: https://blog.csdn.net/ruiruiddd
- * GITHUB: https://github.com/FENGZEYOU123
+ * CSDN: https://blog.csdn.net/ruiruiddd/article/details/117288583
+ * GITHUB: https://github.com/FENGZEYOU123/Android_IosAdjustView
  * Android技术生活-QQ交流群:723592501
  */
 public class IosColumnBrightnessView extends View {
@@ -42,7 +42,7 @@ public class IosColumnBrightnessView extends View {
     //当前圆心边长
     private float mCircleMaxWidth = 0;
     //当前UI高度与view高度的比例
-    private double mCurrentDrawLoudRate = 0;
+    private double mCurrentDrawBrightnessRate = 0;
     //系统最大亮度index-默认255
     private final int mMaxBrightness = 255;
     //记录按压时手指相对于组件view的高度
@@ -141,7 +141,7 @@ public class IosColumnBrightnessView extends View {
     private void initial(Context context){
         mContext=context;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mCurrentDrawLoudRate = getCalculateBrightnessRate();
+        mCurrentDrawBrightnessRate = getCalculateBrightnessRate();
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
@@ -178,7 +178,7 @@ public class IosColumnBrightnessView extends View {
      * 更新所有内容-ui-系统亮度
      */
     private void refreshAll(){
-        setSystemBrightness((int)(mCurrentDrawLoudRate * mMaxBrightness));
+        setSystemBrightness((int)(mCurrentDrawBrightnessRate * mMaxBrightness));
         refreshUI();
     }
     /**
@@ -201,12 +201,12 @@ public class IosColumnBrightnessView extends View {
      * 计算手指移动后亮度UI占比大小，视其为亮度大小
      */
     private void calculateLoudRate(){
-        mCurrentDrawLoudRate = ( getHeight() * mCurrentDrawLoudRate + mMoveDistance) /  getHeight();
-        if(mCurrentDrawLoudRate >=1){
-            mCurrentDrawLoudRate =1;
+        mCurrentDrawBrightnessRate = ( getHeight() * mCurrentDrawBrightnessRate + mMoveDistance) /  getHeight();
+        if(mCurrentDrawBrightnessRate >=1){
+            mCurrentDrawBrightnessRate =1;
         }
-        if(mCurrentDrawLoudRate <=0){
-            mCurrentDrawLoudRate =0;
+        if(mCurrentDrawBrightnessRate <=0){
+            mCurrentDrawBrightnessRate =0;
         }
     }
     /**
@@ -231,7 +231,7 @@ public class IosColumnBrightnessView extends View {
         mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_ATOP));
         mPaint.setColor(mColorLoud);
         mRectF.left=0;
-        mRectF.top=(canvas.getHeight()-(int)(canvas.getHeight() * mCurrentDrawLoudRate));
+        mRectF.top=(canvas.getHeight()-(int)(canvas.getHeight() * mCurrentDrawBrightnessRate));
         mRectF.right=canvas.getWidth();
         mRectF.bottom=canvas.getHeight();
         canvas.drawRect(mRectF,mPaint);
@@ -244,7 +244,7 @@ public class IosColumnBrightnessView extends View {
     private void onDrawText(Canvas canvas){
         if(mIsDrawTextVolume) { //如果开启了则开始绘制
             mPaint.setStyle(Paint.Style.FILL);
-            mTextLoud = "" + (int) (mCurrentDrawLoudRate * 100);
+            mTextLoud = "" + (int) (mCurrentDrawBrightnessRate * 100);
             mPaint.setColor(mTextColor);
             canvas.drawText(mTextLoud, (canvas.getWidth() / 2 - mPaint.measureText(mTextLoud) / 2), mTextHeight >= 0 ? mTextHeight : getHeight() / 6, mPaint);
         }
@@ -259,7 +259,7 @@ public class IosColumnBrightnessView extends View {
             mPaint.setColor(mColorVolume);
             mCircleMaxRadius = (float) (Math.sqrt(canvas.getWidth()) * 1.5);
             mCircleMinRadius = (float) (Math.sqrt(canvas.getWidth()) * 1);
-            mCircleMaxWidth = (float) mCurrentDrawLoudRate * (mCircleMaxRadius-mCircleMinRadius)+mCircleMinRadius;
+            mCircleMaxWidth = (float) mCurrentDrawBrightnessRate * (mCircleMaxRadius-mCircleMinRadius)+mCircleMinRadius;
             canvas.drawCircle(canvas.getWidth()/2,(float) (canvas.getHeight()*0.8- mRectBrightnessDrawableMargin), mCircleMaxWidth,mPaint);
             onDrawSunRays(canvas,canvas.getWidth()/2,(float) (canvas.getHeight()*0.8- mRectBrightnessDrawableMargin));
         }
@@ -273,7 +273,7 @@ public class IosColumnBrightnessView extends View {
         //绘制时刻度
         canvas.translate(cx,cy);
         for (int i = 0; i < 10; i++) {
-            canvas.drawLine(mCircleMaxWidth, mCircleMaxWidth, (float)(mCircleMaxWidth+5*mCurrentDrawLoudRate),(float)( mCircleMaxWidth+5*mCurrentDrawLoudRate), mPaint);
+            canvas.drawLine(mCircleMaxWidth, mCircleMaxWidth, (float)(mCircleMaxWidth+5* mCurrentDrawBrightnessRate),(float)( mCircleMaxWidth+5* mCurrentDrawBrightnessRate), mPaint);
             canvas.rotate(36);
         }
 
