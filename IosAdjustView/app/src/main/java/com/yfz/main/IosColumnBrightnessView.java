@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
-import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
@@ -19,7 +18,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -63,13 +61,10 @@ public class IosColumnBrightnessView extends View {
     //当前Canvas LayerId
     private int layerId = 0;
     //亮度图标margin
-    private int mRectVolumeDrawableMargin=10;
+    private int mRectBrightnessDrawableMargin =10;
     //亮度图标粗细
-    private final static int mRectVolumeDrawableWidth=4;
-    /**
-     * 设置声音流类型-默认音乐-iosColumnAudioView_setAudioStreamType
-     */
-    private int mAudioManagerStreamType = AudioManager.STREAM_MUSIC;
+    private final static int mRectBrightnessDrawableWidth =4;
+
     /**
      * 设置圆弧度数-xml-iosColumnAudioView_setRadiusXY
      */
@@ -128,7 +123,6 @@ public class IosColumnBrightnessView extends View {
         TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnAudioView);
         mColorBackground = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorBackground,mColorBackground);
         mColorLoud = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorLoud,mColorLoud);
-        mAudioManagerStreamType =typedArray.getInteger(R.styleable.IosColumnAudioView_iosColumnAudioView_setAudioStreamType, mAudioManagerStreamType);
         mRXY = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setRadiusXY, mRXY);
         mTextSize = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextSize,mTextSize);
         mTextColor = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextColor,mTextColor);
@@ -145,7 +139,7 @@ public class IosColumnBrightnessView extends View {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        mRectVolumeDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/10;
+        mRectBrightnessDrawableMargin = MeasureSpec.getSize(widthMeasureSpec)/10;
         //固定组件高度长度，这里不做适配，可自行修改
         setMeasuredDimension(dp2px(mContext,mViewWeight),dp2px(mContext,mViewHeight));
     }
@@ -163,7 +157,6 @@ public class IosColumnBrightnessView extends View {
         mPaint.setTextSize(mTextSize);
         getPermission();
         stopAutoBrightness(mContext);
-//        setLayerType(LAYER_TYPE_SOFTWARE, null);
 
     }
 
@@ -268,13 +261,13 @@ public class IosColumnBrightnessView extends View {
     private void onDrawSunCircle(Canvas canvas){
         if(mIsDrawDrawableVolume){ //如果开启了则开始绘制
             mPaint.setStyle(Paint.Style.FILL);
-            mPaint.setStrokeWidth(mRectVolumeDrawableWidth);
+            mPaint.setStrokeWidth(mRectBrightnessDrawableWidth);
             mPaint.setColor(mColorVolume);
             mCircleMaxRadius = (float) (Math.sqrt(canvas.getWidth()) * 1.5);
             mCircleMinRadius = (float) (Math.sqrt(canvas.getWidth()) * 1);
             mCircleMaxWidth = (float) mCurrentDrawLoudRate * (mCircleMaxRadius-mCircleMinRadius)+mCircleMinRadius;
-            canvas.drawCircle(canvas.getWidth()/2,(float) (canvas.getHeight()*0.8-mRectVolumeDrawableMargin), mCircleMaxWidth,mPaint);
-            onDrawSunRays(canvas,canvas.getWidth()/2,(float) (canvas.getHeight()*0.8-mRectVolumeDrawableMargin));
+            canvas.drawCircle(canvas.getWidth()/2,(float) (canvas.getHeight()*0.8- mRectBrightnessDrawableMargin), mCircleMaxWidth,mPaint);
+            onDrawSunRays(canvas,canvas.getWidth()/2,(float) (canvas.getHeight()*0.8- mRectBrightnessDrawableMargin));
         }
     }
 
@@ -374,7 +367,7 @@ public class IosColumnBrightnessView extends View {
      * 计算亮度比例
      */
     private double getCalculateBrightnessRate(){
-        return (double) mAudioManager.getStreamVolume(mAudioManagerStreamType)/ mMaxBrightness;
+        return (double) getSystemBrightness()/ mMaxBrightness;
     }
     /**
      * 根据手机的分辨率从 dp 的单位 转成为 px(像素)
