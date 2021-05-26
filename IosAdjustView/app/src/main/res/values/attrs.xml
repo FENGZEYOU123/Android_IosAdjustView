@@ -25,6 +25,5 @@
         <attr name="iosColumnBrightnessView_setIsDrawTextBright" format="boolean"></attr>
         <attr name="iosColumnBrightnessView_setIsDrawDrawableBright" format="boolean"></attr>
         <attr name="iosColumnBrightnessView_setBrightnessColor" format="color"></attr>
-
     </declare-styleable>
 </resources>
