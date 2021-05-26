@@ -22,8 +22,8 @@ import androidx.annotation.Nullable;
 /**
  * 作者：YFZ
  * 简介：仿ios风格的音量控制view
- * CSDN: https://blog.csdn.net/ruiruiddd
- * GITHUB: https://github.com/FENGZEYOU123
+ * CSDN项目地址: https://blog.csdn.net/ruiruiddd/article/details/117280116
+ * GITHUB项目地址: https://github.com/FENGZEYOU123/Android_IosAdjustView
  * Android技术生活-QQ交流群:723592501
  */
 public class IosColumnAudioView extends View {

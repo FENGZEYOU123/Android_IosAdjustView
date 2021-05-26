@@ -14,4 +14,17 @@
         <attr name="iosColumnAudioView_setVolumeDrawable" format="reference"></attr>
 
     </declare-styleable>
+    <declare-styleable
+        name="IosColumnBrightnessView">
+        <attr name="iosColumnBrightnessView_setColorBackground" format="color"></attr>
+        <attr name="iosColumnBrightnessView_setColorBright" format="color"></attr>
+        <attr name="iosColumnBrightnessView_setRadiusXY" format="dimension"></attr>
+        <attr name="iosColumnBrightnessView_setTextSize" format="dimension"></attr>
+        <attr name="iosColumnBrightnessView_setTextColor" format="color"></attr>
+        <attr name="iosColumnBrightnessView_setTextHeight" format="integer|dimension"></attr>
+        <attr name="iosColumnBrightnessView_setIsDrawTextBright" format="boolean"></attr>
+        <attr name="iosColumnBrightnessView_setIsDrawDrawableBright" format="boolean"></attr>
+        <attr name="iosColumnBrightnessView_setBrightnessColor" format="color"></attr>
+
+    </declare-styleable>
 </resources>

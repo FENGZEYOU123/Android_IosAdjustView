@@ -10,7 +10,6 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
-import android.graphics.drawable.Drawable;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -105,10 +104,6 @@ public class IosColumnBrightnessView extends View {
      * 设置亮度圆弧颜色-xml-iosColumnAudioView_setColorVolume
      */
     private int mColorVolume = Color.DKGRAY;
-    /**
-     * 设置亮度静音图标drawable-xml-iosColumnAudioView_setColorVolumeDrawable
-     */
-    private Drawable mColorDrawable = null;
     //固定组件高度长度，这里不做适配，可自行修改
     private int mViewHeight = 150, mViewWeight=50;
 
@@ -120,17 +115,16 @@ public class IosColumnBrightnessView extends View {
     public IosColumnBrightnessView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         mTextSize = sp2px(context,mTextSize);
-        TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnAudioView);
-        mColorBackground = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorBackground,mColorBackground);
-        mColorLoud = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setColorLoud,mColorLoud);
-        mRXY = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setRadiusXY, mRXY);
-        mTextSize = typedArray.getDimension(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextSize,mTextSize);
-        mTextColor = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextColor,mTextColor);
-        mTextHeight = typedArray.getInt(R.styleable.IosColumnAudioView_iosColumnAudioView_setTextHeight,mTextHeight);
-        mIsDrawTextVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawTextVolume,mIsDrawTextVolume);
-        mIsDrawDrawableVolume = typedArray.getBoolean(R.styleable.IosColumnAudioView_iosColumnAudioView_setIsDrawDrawableVolume,mIsDrawDrawableVolume);
-        mColorVolume = typedArray.getColor(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeColor, mColorVolume);
-        mColorDrawable = typedArray.getDrawable(R.styleable.IosColumnAudioView_iosColumnAudioView_setVolumeDrawable);
+        TypedArray typedArray=context.obtainStyledAttributes(attrs, R.styleable.IosColumnBrightnessView);
+        mColorBackground = typedArray.getColor(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setColorBackground,mColorBackground);
+        mColorLoud = typedArray.getColor(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setColorBright,mColorLoud);
+        mRXY = typedArray.getDimension(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setRadiusXY, mRXY);
+        mTextSize = typedArray.getDimension(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setTextSize,mTextSize);
+        mTextColor = typedArray.getColor(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setTextColor,mTextColor);
+        mTextHeight = typedArray.getInt(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setTextHeight,mTextHeight);
+        mIsDrawTextVolume = typedArray.getBoolean(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setIsDrawTextBright,mIsDrawTextVolume);
+        mIsDrawDrawableVolume = typedArray.getBoolean(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setIsDrawDrawableBright,mIsDrawDrawableVolume);
+        mColorVolume = typedArray.getColor(R.styleable.IosColumnBrightnessView_iosColumnBrightnessView_setBrightnessColor, mColorVolume);
         typedArray.recycle();
 
         initial(context);
