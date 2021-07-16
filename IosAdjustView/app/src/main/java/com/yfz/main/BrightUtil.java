@@ -11,7 +11,6 @@ import android.view.WindowManager;
 /**
  * 作者：YFZ
  * 简介：调节屏幕亮度工具类
- * Android技术生活-QQ交流群:723592501
  */
 public class BrightUtil {
 

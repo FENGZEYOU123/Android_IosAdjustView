@@ -27,7 +27,6 @@ import androidx.annotation.Nullable;
  * 简介：仿ios风格的亮度控制view
  * CSDN: https://blog.csdn.net/ruiruiddd/article/details/117288583
  * GITHUB: https://github.com/FENGZEYOU123/Android_IosAdjustView
- * Android技术生活-QQ交流群:723592501
  */
 public class IosColumnBrightnessView extends View {
     private Context mContext;
